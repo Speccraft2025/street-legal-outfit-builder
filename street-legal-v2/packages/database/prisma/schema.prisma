@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- PRIMITIVES ---
+
+enum Role {
+  CUSTOMER
+  CREATOR
+  SUPPLIER
+  ADMIN
+}
+
+model User {
+  id             String    @id @default(uuid())
+  role           Role      @default(CUSTOMER)
+  profile        Profile?
+  outfits        Outfit[]
+  orders         Order[]
+}
+
+model Profile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  handle         String    @unique
+  bio            String?
+  avatarUrl      String?
+}
+
+model SupplierProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  businessName   String
+  inventory      Product[]
+  fulfillment    FulfillmentTask[]
+}
+
+enum ItemState {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Product {
+  id             String    @id @default(uuid())
+  supplierId     String
+  supplier       SupplierProfile @relation(fields: [supplierId], references: [id])
+  name           String
+  basePrice      Int       // In cents
+  status         ItemState @default(AVAILABLE)
+  outfitItems    OutfitItem[]
+}
+
+model Outfit {
+  id             String    @id @default(uuid())
+  creatorId      String
+  creator        User      @relation(fields: [creatorId], references: [id])
+  name           String
+  items          OutfitItem[]
+  shareCode      String    @unique
+  remixSourceId  String?   
+  commissionRate Float     
+  orders         Order[]
+}
+
+enum LayerType {
+  HEADWEAR
+  TOP
+  BOTTOM
+  FOOTWEAR
+  ACCESSORY
+}
+
+model OutfitItem {
+  id             String    @id @default(uuid())
+  outfitId       String
+  outfit         Outfit    @relation(fields: [outfitId], references: [id])
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id])
+  layer          LayerType 
+}
+
+// --- COMMERCE & LEDGER ---
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+model Order {
+  id             String    @id @default(uuid())
+  customerId     String
+  customer       User      @relation(fields: [customerId], references: [id])
+  outfitId       String
+  outfit         Outfit    @relation(fields: [outfitId], references: [id])
+  totalAmount    Int
+  status         OrderStatus @default(PENDING)
+  fulfillments   FulfillmentTask[]
+  ledger         LedgerEntry[]
+}
+
+enum FulfillState {
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+model FulfillmentTask {
+  id             String    @id @default(uuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  supplierId     String
+  supplier       SupplierProfile @relation(fields: [supplierId], references: [id])
+  status         FulfillState @default(PENDING)
+  deliveryFee    Int
+}
+
+enum LedgerType {
+  SUPPLIER_PAYOUT
+  CREATOR_COMMISSION
+  PLATFORM_FEE
+}
+
+enum PayState {
+  PENDING
+  CLEARED
+}
+
+model LedgerEntry {
+  id             String    @id @default(uuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  recipientId    String    // User/Supplier ID or "PLATFORM"
+  amount         Int
+  type           LedgerType
+  status         PayState  @default(PENDING)
+}
