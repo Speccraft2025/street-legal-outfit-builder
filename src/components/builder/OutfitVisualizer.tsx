@@ -4,6 +4,7 @@ import React from 'react';
 import { Product, Category } from '@/types';
 import { VisualMode } from '@/store/useOutfitStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ItemGraphic, isIconImage, getIconType } from './ItemGraphic';
 
 interface OutfitVisualizerProps {
   selectedItems: Partial<Record<Category, Product>>;
@@ -83,7 +84,7 @@ export default function OutfitVisualizer({
                     key={`a-${selectedItems.Accessories.id}`} 
                     category="Accessories" 
                     product={selectedItems.Accessories} 
-                    className={selectedItems.Accessories.image === 'accessory_glasses' ? 'top-[9%] h-[8%] z-50' : 'top-[22%] h-[20%] z-40 scale-x-90 opacity-90'} 
+                    className={getIconType(selectedItems.Accessories.image) === 'glasses' ? 'top-[9%] h-[8%] z-50' : 'top-[22%] h-[20%] z-40 scale-x-90 opacity-90'}
                     zOffset={40}
                   />
                 )}
@@ -171,12 +172,16 @@ function FlatLayCard({ category, product, index, isMini = false }: { category: C
       </span>
       {product ? (
         <div className="w-full h-full flex flex-col items-center justify-center mt-2">
-          {product.image.startsWith('accessory_') ? (
-            <div className="w-12 h-12 flex items-center justify-center text-accent text-lg">✦</div>
+          {isIconImage(product.image) ? (
+            <ItemGraphic
+              image={product.image}
+              strokeWidth={1.2}
+              className="w-12 h-12 text-accent drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
+            />
           ) : (
-            <img 
-              src={product.image} 
-              alt={product.name} 
+            <img
+              src={product.image}
+              alt={product.name}
               className="max-w-[75%] max-h-[75%] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
             />
           )}
@@ -218,31 +223,27 @@ function ModelLayer({ category, product, className, isHolo = false, zOffset = 0 
       className={`absolute left-1/2 w-[70%] md:w-[65%] flex items-center justify-center transition-all duration-700 pointer-events-none ${(className ?? '').replace('-translate-x-1/2', '').replace('scale-x-90', '')}`}
       style={{ transform: `translateX(-50%) translateZ(${zOffset}px) ${className?.includes('scale-x-90') ? 'scaleX(0.9)' : ''}` }}
     >
-      {product.image.startsWith('accessory_') ? (
-        // Custom graphic element placement for accessories (e.g. shades or bags)
-        <div className={`w-14 h-14 flex items-center justify-center rounded-xl bg-accent/10 border border-accent/30 ${isHolo ? 'animate-pulse' : ''}`}>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="1.5"
-            className="w-8 h-8"
-          >
-            {product.image === 'accessory_glasses' && (
-              <path d="M2 10h3l1.5-3h11l1.5 3h3v2c0 3-2 5-5 5H8.5c-3 0-5-2-5-5v-2z" />
-            )}
-            {product.image === 'accessory_sling' && (
-              <path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2M3 10h18v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8zm5 0V7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3" />
-            )}
-            {product.image === 'accessory_watch' && (
-              <path d="M12 2v4M12 18v4M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm-3 6h3.5L14 9.5" />
-            )}
-          </svg>
-        </div>
+      {isIconImage(product.image) ? (
+        category === 'Accessories' ? (
+          // Compact badge treatment for small accent items (shades, bags, watches)
+          <div className={`w-14 h-14 flex items-center justify-center rounded-xl bg-accent/10 border border-accent/30 ${isHolo ? 'animate-pulse' : ''}`}>
+            <ItemGraphic image={product.image} strokeWidth={1.5} className="w-8 h-8" style={{ color: 'var(--accent)' }} />
+          </div>
+        ) : (
+          // Full silhouette-filling line art for apparel without real photography
+          <ItemGraphic
+            image={product.image}
+            strokeWidth={1}
+            className={`max-w-full max-h-full w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)] ${
+              isHolo ? 'opacity-80' : ''
+            }`}
+            style={{ color: isHolo ? 'var(--accent)' : 'var(--foreground)' }}
+          />
+        )
       ) : (
-        <img 
-          src={product.image} 
-          alt={product.name} 
+        <img
+          src={product.image}
+          alt={product.name}
           className={`max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)] ${
             isHolo ? 'hue-rotate-[85deg] saturate-200 opacity-80 mix-blend-screen' : ''
           }`}

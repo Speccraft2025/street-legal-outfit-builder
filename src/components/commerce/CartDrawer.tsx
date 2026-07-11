@@ -5,6 +5,7 @@ import { useCartStore, CartEntry } from '@/store/useCartStore';
 import { X, ShoppingBag, Trash2, Smartphone, CreditCard, CheckCircle, RefreshCw, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/types';
+import { ItemGraphic, isIconImage } from '@/components/builder/ItemGraphic';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -139,11 +140,15 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                             /* Single Item render */
                             <div className="flex gap-4 items-center">
                               <div className="w-14 h-14 bg-surface-2 border-border-subtle rounded-xl flex items-center justify-center border border-border-subtle">
-                                <img
-                                  src={entry.product.image}
-                                  alt={entry.product.name}
-                                  className="max-w-[80%] max-h-[80%] object-contain"
-                                />
+                                {isIconImage(entry.product.image) ? (
+                                  <ItemGraphic image={entry.product.image} strokeWidth={1.5} className="w-7 h-7 text-accent" />
+                                ) : (
+                                  <img
+                                    src={entry.product.image}
+                                    alt={entry.product.name}
+                                    className="max-w-[80%] max-h-[80%] object-contain"
+                                  />
+                                )}
                               </div>
                               <div className="flex-1 min-w-0 pr-6">
                                 <span className="text-[7px] uppercase font-black tracking-widest text-accent">
@@ -184,8 +189,8 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                       className="aspect-square bg-surface-2 border-border-subtle border border-border-subtle rounded-lg flex items-center justify-center p-1"
                                       title={`${cat}: ${prod.name}`}
                                     >
-                                      {prod.image.startsWith('accessory_') ? (
-                                        <span className="text-accent text-[8px]">✦</span>
+                                      {isIconImage(prod.image) ? (
+                                        <ItemGraphic image={prod.image} strokeWidth={1.5} className="w-4 h-4 text-accent" />
                                       ) : (
                                         <img
                                           src={prod.image}

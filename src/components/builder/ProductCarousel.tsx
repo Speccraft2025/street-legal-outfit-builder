@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Product, Category } from '@/types';
 import { useOutfitStore } from '@/store/useOutfitStore';
 import { motion } from 'framer-motion';
+import { ItemGraphic, isIconImage, getIconType } from './ItemGraphic';
 
 interface ProductCarouselProps {
   category: Category;
@@ -179,8 +180,8 @@ export default function ProductCarousel({ category, products }: ProductCarouselP
               <div className="w-full h-full flex flex-col items-center justify-center p-2 rounded-2xl relative transition-transform duration-500">
                 {/* Product Image Overlay and Container */}
                 <div className="relative w-full h-[70%] flex items-center justify-center transition-transform duration-500">
-                  {product.image.startsWith('accessory_') ? (
-                    // Beautiful custom SVG/gradient render for Phase 2 accessories
+                  {isIconImage(product.image) ? (
+                    // Beautiful custom SVG/gradient render for items without real photography
                     <AccessoryVectorIcon type={product.image} isSelected={isSelected} />
                   ) : (
                     <img
@@ -223,41 +224,22 @@ export default function ProductCarousel({ category, products }: ProductCarouselP
   );
 }
 
-// Sub-component to render gorgeous dark cyberpunk vector cards for Accessories
+// Sub-component to render gorgeous dark cyberpunk vector cards for items without real photography
 function AccessoryVectorIcon({ type, isSelected }: { type: string; isSelected: boolean }) {
-  let svgPath = '';
-  let viewbox = '0 0 24 24';
-  
-  if (type === 'accessory_glasses') {
-    // Futuristic glasses path
-    svgPath = 'M2 10h3l1.5-3h11l1.5 3h3v2c0 3-2 5-5 5H8.5c-3 0-5-2-5-5v-2zm4.5 0c-1 0-1.5.5-1.5 1.5S5.5 13 6.5 13h2c1 0 1.5-.5 1.5-1.5S9.5 10 8.5 10h-2zm9 0c-1 0-1.5.5-1.5 1.5s.5 1.5 1.5 1.5h2c1 0 1.5-.5 1.5-1.5s-.5-1.5-1.5-1.5h-2z';
-  } else if (type === 'accessory_sling') {
-    // Tactical backpack / sling bag path
-    svgPath = 'M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2M3 10h18v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8zm5 0V7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3';
-  } else {
-    // Chronograph smart watch path
-    svgPath = 'M12 2v4M12 18v4M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm-3 6h3.5L14 9.5';
-  }
-
   return (
     <div className={`w-[70px] h-[70px] rounded-2xl flex flex-col items-center justify-center transition-all duration-700 ${
-      isSelected 
-        ? 'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/40 glow-active scale-110' 
+      isSelected
+        ? 'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/40 glow-active scale-110'
         : 'bg-surface-2 border-border-subtle border border-border-subtle opacity-20 scale-90'
     }`}>
-      <svg
-        viewBox={viewbox}
-        fill="none"
-        stroke={isSelected ? 'var(--accent)' : 'var(--foreground)'}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <ItemGraphic
+        image={type}
+        strokeWidth={1.5}
         className="w-8 h-8"
-      >
-        <path d={svgPath} />
-      </svg>
+        style={{ color: isSelected ? 'var(--accent)' : 'var(--foreground)' }}
+      />
       <span className={`text-[6px] uppercase tracking-widest font-black mt-2 ${isSelected ? 'text-accent' : 'text-white/40'}`}>
-        {type.replace('accessory_', '')}
+        {getIconType(type)}
       </span>
     </div>
   );

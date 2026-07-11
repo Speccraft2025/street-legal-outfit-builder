@@ -5,6 +5,7 @@ import { X, Heart, Sparkles, Trash2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/types';
 import { useOutfitStore } from '@/store/useOutfitStore';
+import { ItemGraphic, isIconImage } from '@/components/builder/ItemGraphic';
 
 interface FavoritesDrawerProps {
   isOpen: boolean;
@@ -89,8 +90,8 @@ export default function FavoritesDrawer({ isOpen, onClose }: FavoritesDrawerProp
                     className="p-3.5 rounded-2xl border border-border-subtle bg-surface-1 hover:bg-surface-2 border-border-subtle cursor-pointer flex gap-4 items-center group transition-all"
                   >
                     <div className="w-12 h-12 bg-surface-2 border-border-subtle rounded-xl flex items-center justify-center border border-border-subtle">
-                      {product.image.startsWith('accessory_') ? (
-                        <span className="text-accent text-[8px]">✦</span>
+                      {isIconImage(product.image) ? (
+                        <ItemGraphic image={product.image} strokeWidth={1.5} className="w-6 h-6 text-accent" />
                       ) : (
                         <img
                           src={product.image}
