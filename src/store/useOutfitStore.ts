@@ -2,13 +2,10 @@ import { create } from 'zustand';
 import { Product, Category, Outfit } from '@/types';
 import { products } from '@/data/products';
 
-export type VisualMode = 'flat-lay' | 'human-model' | 'avatar-3d';
-
 interface OutfitState {
   selectedItems: Partial<Record<Category, Product>>;
-  visualMode: VisualMode;
   vibe: string | null;
-  
+
   // History tracking (Undo/Redo)
   undoStack: Partial<Record<Category, Product>>[];
   redoStack: Partial<Record<Category, Product>>[];
@@ -16,7 +13,6 @@ interface OutfitState {
   // Actions
   selectItem: (category: Category, product: Product) => void;
   removeItem: (category: Category) => void;
-  setVisualMode: (mode: VisualMode) => void;
   setVibe: (vibe: string | null) => void;
   randomizeOutfit: () => void;
   clearOutfit: () => void;
@@ -51,7 +47,6 @@ const pushToHistory = (
 
 export const useOutfitStore = create<OutfitState>((set, get) => ({
   selectedItems: {},
-  visualMode: 'flat-lay',
   vibe: null,
   undoStack: [],
   redoStack: [],
@@ -79,8 +74,6 @@ export const useOutfitStore = create<OutfitState>((set, get) => ({
     };
   }),
 
-  setVisualMode: (visualMode) => set({ visualMode }),
-  
   setVibe: (vibe) => set({ vibe }),
 
   randomizeOutfit: () => set((state) => {

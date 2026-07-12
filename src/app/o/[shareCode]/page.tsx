@@ -192,19 +192,18 @@ export default function ShareCodePage({ params }: PageProps) {
       {/* Main Share Stage */}
       <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col md:flex-row gap-8 max-w-6xl mx-auto w-full min-h-0 select-none pb-24 md:pb-8">
         
-        {/* Left Side: Large 3D Hologram Preview (60% width) */}
+        {/* Left Side: Large Fit Preview (60% width) */}
         <div className="flex-1 glass rounded-[2.5rem] border border-border-subtle relative flex items-center justify-center min-h-[350px] md:min-h-[500px] shadow-[0_15px_45px_rgba(0,0,0,0.5)]">
           {outfit && (
             <OutfitVisualizer
               selectedItems={outfit.items}
-              visualMode="avatar-3d"
               zoom={1.0}
               rotation={0}
             />
           )}
 
           <div className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-accent text-[8px] font-black uppercase tracking-[0.25em]">
-            <Flame size={10} /> Holographic Preview
+            <Flame size={10} /> Fit Preview
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useOutfitStore } from '@/store/useOutfitStore';
 import { useCartStore } from '@/store/useCartStore';
 import { supabase } from '@/lib/supabase';
+import { ItemGraphic, isIconImage } from '@/components/builder/ItemGraphic';
 import { 
   FolderHeart, 
   Trash2, 
@@ -238,12 +239,12 @@ export default function ClosetPage() {
                             return (
                               <div key={cat} className="aspect-square bg-surface-2 border-border-subtle border border-border-subtle rounded-lg flex items-center justify-center p-1 relative">
                                 {product ? (
-                                  product.image.startsWith('accessory_') ? (
-                                    <span className="text-accent text-[8px]">✦</span>
+                                  isIconImage(product.image) ? (
+                                    <ItemGraphic image={product.image} strokeWidth={1.5} className="w-5 h-5 text-accent" />
                                   ) : (
-                                    <img 
-                                      src={product.image} 
-                                      alt={product.name} 
+                                    <img
+                                      src={product.image}
+                                      alt={product.name}
                                       className="max-w-full max-h-full object-contain"
                                     />
                                   )
@@ -312,12 +313,12 @@ export default function ClosetPage() {
                     </button>
 
                     <div className="w-full h-24 flex items-center justify-center p-2 relative my-2">
-                      {item.image.startsWith('accessory_') ? (
-                        <span className="text-accent text-lg">✦</span>
+                      {isIconImage(item.image) ? (
+                        <ItemGraphic image={item.image} strokeWidth={1.2} className="w-12 h-12 text-accent" />
                       ) : (
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
+                        <img
+                          src={item.image}
+                          alt={item.name}
                           className="max-w-[85%] max-h-[85%] object-contain group-hover:scale-105 transition-transform duration-500"
                         />
                       )}

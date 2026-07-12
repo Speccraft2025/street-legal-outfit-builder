@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useOutfitStore, VisualMode } from '@/store/useOutfitStore';
+import { useOutfitStore } from '@/store/useOutfitStore';
 import OutfitVisualizer from './OutfitVisualizer';
 import { Outfit } from '@/types';
 import * as htmlToImage from 'html-to-image';
@@ -23,15 +23,13 @@ import {
 } from 'lucide-react';
 
 export default function CenterStage() {
-  const { 
-    selectedItems, 
-    visualMode, 
-    setVisualMode, 
-    randomizeOutfit, 
-    undo, 
-    redo, 
-    canUndo, 
-    canRedo 
+  const {
+    selectedItems,
+    randomizeOutfit,
+    undo,
+    redo,
+    canUndo,
+    canRedo
   } = useOutfitStore();
 
   const [zoom, setZoom] = useState(1.0);
@@ -153,28 +151,8 @@ export default function CenterStage() {
       {/* Background radial glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--glow-hover)_0%,transparent_70%)] pointer-events-none" />
 
-      {/* Top Header Selector: Switchable Visual Modes */}
-      <div className="w-full flex justify-between items-center z-20">
-        <div className="flex bg-surface-2 border-border-subtle border border-border-subtle p-1 rounded-2xl backdrop-blur-xl">
-          {[
-            { id: 'flat-lay' as VisualMode, label: 'Flat Lay' },
-            { id: 'human-model' as VisualMode, label: 'Model Flat' },
-            { id: 'avatar-3d' as VisualMode, label: '3D Holo' },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setVisualMode(mode.id)}
-              className={`px-4 py-2 text-[9px] uppercase font-black tracking-widest rounded-xl transition-all ${
-                visualMode === mode.id
-                  ? 'bg-accent text-black font-black glow-primary'
-                  : 'text-white/40 hover:text-white/80'
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-
+      {/* Top Header hud */}
+      <div className="w-full flex justify-end items-center z-20">
         {/* Undo/Redo Engine hud */}
         <div className="flex items-center gap-1.5 bg-surface-2 border-border-subtle border border-border-subtle p-1.5 rounded-2xl">
           <button
@@ -211,7 +189,6 @@ export default function CenterStage() {
         ) : (
           <OutfitVisualizer
             selectedItems={selectedItems}
-            visualMode={visualMode}
             zoom={zoom}
             rotation={rotation}
           />

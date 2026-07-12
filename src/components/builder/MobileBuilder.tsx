@@ -26,14 +26,12 @@ interface MobileBuilderProps {
 }
 
 export default function MobileBuilder({ onOpenCart, onOpenFavorites, onNavigate }: MobileBuilderProps) {
-  const { 
-    selectedItems, 
-    visualMode, 
-    setVisualMode, 
-    randomizeOutfit, 
-    undo, 
+  const {
+    selectedItems,
+    randomizeOutfit,
+    undo,
     canUndo,
-    getTotalPrice 
+    getTotalPrice
   } = useOutfitStore();
 
   const { addOutfit } = useCartStore();
@@ -98,32 +96,10 @@ export default function MobileBuilder({ onOpenCart, onOpenFavorites, onNavigate 
         ) : (
           <OutfitVisualizer
             selectedItems={selectedItems}
-            visualMode={visualMode}
             zoom={0.9}
             rotation={0}
           />
         )}
-
-        {/* Orbit mode pills floating on visualizer */}
-        <div className="absolute top-4 left-4 z-20 flex gap-1.5">
-          {[
-            { id: 'flat-lay', label: 'Flat' },
-            { id: 'human-model', label: 'Model' },
-            { id: 'avatar-3d', label: '3D' },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setVisualMode(mode.id as any)}
-              className={`px-3 py-1.5 rounded-full text-[7px] uppercase font-black tracking-widest transition-all ${
-                visualMode === mode.id
-                  ? 'bg-accent text-black shadow-premium'
-                  : 'bg-surface-2 border-border-subtle text-white/50 border border-border-subtle'
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
 
         {/* Floating Shuffle & Undo keys */}
         <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-2">

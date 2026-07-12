@@ -5,6 +5,7 @@ import { useOutfitStore } from '@/store/useOutfitStore';
 import { useCartStore } from '@/store/useCartStore';
 import { products } from '@/data/products';
 import { supabase } from '@/lib/supabase';
+import { ItemGraphic, isIconImage } from '@/components/builder/ItemGraphic';
 import { 
   Heart, 
   Repeat2, 
@@ -70,6 +71,150 @@ const COMMUNITY_OUTFITS = [
       Tops: products.find(p => p.id === 't3'),
       Bottoms: products.find(p => p.id === 'b3'),
       Footgear: products.find(p => p.id === 'f3'),
+      Accessories: products.find(p => p.id === 'a2'),
+    }
+  },
+  {
+    id: 'c4',
+    name: 'GHOST RUNNER RIG',
+    creator: '@void_walker',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ghostrunner',
+    likes: 1105,
+    remixes: 210,
+    vibe: 'tech',
+    items: {
+      Headgear: products.find(p => p.id === 'h5'),
+      Tops: products.find(p => p.id === 't11'),
+      Bottoms: products.find(p => p.id === 'b4'),
+      Footgear: products.find(p => p.id === 'f8'),
+      Accessories: products.find(p => p.id === 'a1'),
+    }
+  },
+  {
+    id: 'c5',
+    name: 'RAW ARCHIVE DENIM',
+    creator: '@denim_disciple',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=archivedenim',
+    likes: 760,
+    remixes: 88,
+    vibe: '90s',
+    items: {
+      Headgear: products.find(p => p.id === 'h6'),
+      Tops: products.find(p => p.id === 't7'),
+      Bottoms: products.find(p => p.id === 'b6'),
+      Footgear: products.find(p => p.id === 'f7'),
+      Accessories: products.find(p => p.id === 'a5'),
+    }
+  },
+  {
+    id: 'c6',
+    name: 'JUA KALI WORKWEAR',
+    creator: '@site_supervisor',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=juakali',
+    likes: 640,
+    remixes: 54,
+    vibe: 'utility',
+    items: {
+      Headgear: products.find(p => p.id === 'h7'),
+      Tops: products.find(p => p.id === 't8'),
+      Bottoms: products.find(p => p.id === 'b1'),
+      Footgear: products.find(p => p.id === 'f5'),
+      Accessories: products.find(p => p.id === 'a6'),
+    }
+  },
+  {
+    id: 'c7',
+    name: 'MATATU RUSH HOUR',
+    creator: '@nairobi_native',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=matatu',
+    likes: 890,
+    remixes: 133,
+    vibe: 'street',
+    items: {
+      Headgear: products.find(p => p.id === 'h2'),
+      Tops: products.find(p => p.id === 't6'),
+      Bottoms: products.find(p => p.id === 'b7'),
+      Footgear: products.find(p => p.id === 'f4'),
+      Accessories: products.find(p => p.id === 'a7'),
+    }
+  },
+  {
+    id: 'c8',
+    name: 'SIGNAL NOISE TECH',
+    creator: '@grid_runner',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=signalnoise',
+    likes: 1230,
+    remixes: 245,
+    vibe: 'tech',
+    items: {
+      Headgear: products.find(p => p.id === 'h9'),
+      Tops: products.find(p => p.id === 't2'),
+      Bottoms: products.find(p => p.id === 'b5'),
+      Footgear: products.find(p => p.id === 'f1'),
+      Accessories: products.find(p => p.id === 'a3'),
+    }
+  },
+  {
+    id: 'c9',
+    name: 'COAST OFF-DUTY',
+    creator: '@lowkey_luxe',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=coastoffduty',
+    likes: 540,
+    remixes: 47,
+    vibe: 'minimal',
+    items: {
+      Headgear: products.find(p => p.id === 'h4'),
+      Tops: products.find(p => p.id === 't9'),
+      Bottoms: products.find(p => p.id === 'b3'),
+      Footgear: products.find(p => p.id === 'f6'),
+      Accessories: products.find(p => p.id === 'a8'),
+    }
+  },
+  {
+    id: 'c10',
+    name: 'FLANNEL DUST BOWL',
+    creator: '@thrift_theory',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=flanneldust',
+    likes: 615,
+    remixes: 61,
+    vibe: '90s',
+    items: {
+      Headgear: products.find(p => p.id === 'h8'),
+      Tops: products.find(p => p.id === 't10'),
+      Bottoms: products.find(p => p.id === 'b8'),
+      Footgear: products.find(p => p.id === 'f3'),
+      Accessories: products.find(p => p.id === 'a5'),
+    }
+  },
+  {
+    id: 'c11',
+    name: 'CHROME MINIMAL CUT',
+    creator: '@clean_slate',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=chromeminimal',
+    likes: 720,
+    remixes: 65,
+    vibe: 'minimal',
+    items: {
+      Headgear: products.find(p => p.id === 'h1'),
+      Tops: products.find(p => p.id === 't5'),
+      Bottoms: products.find(p => p.id === 'b5'),
+      Footgear: products.find(p => p.id === 'f4'),
+      Accessories: products.find(p => p.id === 'a4'),
+    }
+  },
+  {
+    id: 'c12',
+    name: 'VANDAL UTILITY DROP',
+    creator: '@street_supply',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=vandalutility',
+    likes: 980,
+    remixes: 102,
+    vibe: 'utility',
+    items: {
+      Headgear: products.find(p => p.id === 'h3'),
+      Tops: products.find(p => p.id === 't4'),
+      Bottoms: products.find(p => p.id === 'b4'),
+      Footgear: products.find(p => p.id === 'f2'),
       Accessories: products.find(p => p.id === 'a2'),
     }
   }
@@ -182,7 +327,10 @@ export default function CommunityPage() {
                 { id: 'all', label: 'All fits' },
                 { id: 'tech', label: 'Tech' },
                 { id: 'cyber', label: 'Cyber' },
-                { id: 'minimal', label: 'Minimal' }
+                { id: 'minimal', label: 'Minimal' },
+                { id: 'utility', label: 'Utility' },
+                { id: '90s', label: '90s' },
+                { id: 'street', label: 'Street' }
               ].map((vibe) => (
                 <button
                   key={vibe.id}
@@ -237,12 +385,12 @@ export default function CommunityPage() {
                             className="aspect-square bg-surface-2 border-border-subtle border border-border-subtle rounded-xl flex items-center justify-center p-1.5 relative group/thumb"
                           >
                             {product ? (
-                              product.image.startsWith('accessory_') ? (
-                                <span className="text-accent text-[8px]">✦</span>
+                              isIconImage(product.image) ? (
+                                <ItemGraphic image={product.image} strokeWidth={1.5} className="w-6 h-6 text-accent" />
                               ) : (
-                                <img 
-                                  src={product.image} 
-                                  alt={product.name} 
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
                                   className="max-w-full max-h-full object-contain"
                                 />
                               )

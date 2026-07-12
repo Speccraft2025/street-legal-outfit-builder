@@ -2,35 +2,22 @@
 
 import React from 'react';
 import { Product, Category } from '@/types';
-import { VisualMode } from '@/store/useOutfitStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ItemGraphic, isIconImage, getIconType } from './ItemGraphic';
 
 interface OutfitVisualizerProps {
   selectedItems: Partial<Record<Category, Product>>;
-  visualMode: VisualMode;
   zoom: number;
   rotation: number;
 }
 
 export default function OutfitVisualizer({
   selectedItems,
-  visualMode,
   zoom,
   rotation
 }: OutfitVisualizerProps) {
-  // Setup standard dimensions
-  const hasItems = Object.keys(selectedItems).length > 0;
-
-  // Base animation variants for layering
-  const layerVariants = {
-    initial: { opacity: 0, scale: 0.8, y: 15 },
-    animate: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 15 } },
-    exit: { opacity: 0, scale: 0.9, y: -10, transition: { duration: 0.2 } }
-  };
-
   return (
-    <div 
+    <div
       className="relative w-full h-full flex items-center justify-center overflow-hidden transition-all duration-500"
       style={{
         transform: `scale(${zoom}) rotateY(${rotation}deg)`,
@@ -38,176 +25,54 @@ export default function OutfitVisualizer({
         transformStyle: 'preserve-3d'
       }}
     >
-      <AnimatePresence mode="wait">
-        {visualMode === 'flat-lay' && (
-          <motion.div 
-            key="flat-lay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="w-full h-full grid grid-cols-2 grid-rows-2 gap-4 md:gap-8 p-6 md:p-12 items-center justify-center max-w-[500px] max-h-[500px]"
-          >
-            {/* Flat Lay: Editorial grid style */}
-            <FlatLayCard category="Headgear" product={selectedItems.Headgear} index={0} />
-            <FlatLayCard category="Tops" product={selectedItems.Tops} index={1} />
-            <FlatLayCard category="Bottoms" product={selectedItems.Bottoms} index={2} />
-            <FlatLayCard category="Footgear" product={selectedItems.Footgear} index={3} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="relative w-full h-full flex items-center justify-center min-h-[400px] md:min-h-[550px]"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Sleek aesthetic Human Silhouette Backdrop */}
+        <HumanSilhouette />
+
+        {/* Layer Stacked Clothes */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
+          <AnimatePresence>
+            {/* Headgear Layer */}
+            <ModelLayer key={`h-${selectedItems.Headgear?.id}`} category="Headgear" product={selectedItems.Headgear} className="top-[3%] h-[18%] z-40" zOffset={30} />
+
+            {/* Accessories: Eyewear overlay on Head / Sling across torso */}
             {selectedItems.Accessories && (
-              <div className="col-span-2 flex justify-center -mt-2 pointer-events-none">
-                <FlatLayCard category="Accessories" product={selectedItems.Accessories} index={4} isMini />
-              </div>
+              <ModelLayer
+                key={`a-${selectedItems.Accessories.id}`}
+                category="Accessories"
+                product={selectedItems.Accessories}
+                className={getIconType(selectedItems.Accessories.image) === 'glasses' ? 'top-[9%] h-[8%] z-50' : 'top-[22%] h-[20%] z-40 scale-x-90 opacity-90'}
+                zOffset={40}
+              />
             )}
-          </motion.div>
-        )}
 
-        {visualMode === 'human-model' && (
-          <motion.div 
-            key="human-model"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative w-full h-full flex items-center justify-center min-h-[400px] md:min-h-[550px]"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {/* Sleek aesthetic Human Silhouette Backdrop */}
-            <HumanSilhouette />
+            {/* Tops Layer */}
+            <ModelLayer key={`t-${selectedItems.Tops?.id}`} category="Tops" product={selectedItems.Tops} className="top-[18%] h-[32%] z-30" zOffset={20} />
 
-            {/* Layer Stacked Clothes */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
-              <AnimatePresence>
-                {/* Headgear Layer */}
-                <ModelLayer key={`h-${selectedItems.Headgear?.id}`} category="Headgear" product={selectedItems.Headgear} className="top-[3%] h-[18%] z-40" zOffset={30} />
-                
-                {/* Accessories: Eyewear overlay on Head / Sling across torso */}
-                {selectedItems.Accessories && (
-                  <ModelLayer 
-                    key={`a-${selectedItems.Accessories.id}`} 
-                    category="Accessories" 
-                    product={selectedItems.Accessories} 
-                    className={getIconType(selectedItems.Accessories.image) === 'glasses' ? 'top-[9%] h-[8%] z-50' : 'top-[22%] h-[20%] z-40 scale-x-90 opacity-90'}
-                    zOffset={40}
-                  />
-                )}
-                
-                {/* Tops Layer */}
-                <ModelLayer key={`t-${selectedItems.Tops?.id}`} category="Tops" product={selectedItems.Tops} className="top-[18%] h-[32%] z-30" zOffset={20} />
-                
-                {/* Bottoms Layer */}
-                <ModelLayer key={`b-${selectedItems.Bottoms?.id}`} category="Bottoms" product={selectedItems.Bottoms} className="top-[44%] h-[34%] z-20" zOffset={10} />
-                
-                {/* Footgear Layer */}
-                <ModelLayer key={`f-${selectedItems.Footgear?.id}`} category="Footgear" product={selectedItems.Footgear} className="top-[73%] h-[22%] z-10" zOffset={0} />
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
+            {/* Bottoms Layer */}
+            <ModelLayer key={`b-${selectedItems.Bottoms?.id}`} category="Bottoms" product={selectedItems.Bottoms} className="top-[44%] h-[34%] z-20" zOffset={10} />
 
-        {visualMode === 'avatar-3d' && (
-          <motion.div 
-            key="avatar-3d"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative w-full h-full flex items-center justify-center min-h-[400px] md:min-h-[550px]"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {/* holographic matrix background */}
-            <HoloGrid />
-
-            {/* Glowing levitating clothing stack */}
-            <motion.div 
-              animate={{ 
-                y: [0, -8, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              <AnimatePresence>
-                {/* Headgear Layer (Glowing Hologram) */}
-                <ModelLayer key={`holo-h-${selectedItems.Headgear?.id}`} category="Headgear" product={selectedItems.Headgear} className="top-[3%] h-[18%] z-40 filter drop-shadow-[0_0_15px_rgba(204,255,0,0.4)]" isHolo zOffset={120} />
-                
-                {/* Accessories Layer */}
-                {selectedItems.Accessories && (
-                  <ModelLayer key={`holo-a-${selectedItems.Accessories.id}`} category="Accessories" product={selectedItems.Accessories} className="top-[18%] h-[25%] z-50 filter drop-shadow-[0_0_15px_rgba(204,255,0,0.4)]" isHolo zOffset={150} />
-                )}
-                
-                {/* Tops Layer */}
-                <ModelLayer key={`holo-t-${selectedItems.Tops?.id}`} category="Tops" product={selectedItems.Tops} className="top-[18%] h-[32%] z-30 filter drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]" isHolo zOffset={80} />
-                
-                {/* Bottoms Layer */}
-                <ModelLayer key={`holo-b-${selectedItems.Bottoms?.id}`} category="Bottoms" product={selectedItems.Bottoms} className="top-[44%] h-[34%] z-20 filter drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]" isHolo zOffset={40} />
-                
-                {/* Footgear Layer */}
-                <ModelLayer key={`holo-f-${selectedItems.Footgear?.id}`} category="Footgear" product={selectedItems.Footgear} className="top-[73%] h-[22%] z-10 filter drop-shadow-[0_0_15px_rgba(204,255,0,0.5)]" isHolo zOffset={0} />
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {/* Footgear Layer */}
+            <ModelLayer key={`f-${selectedItems.Footgear?.id}`} category="Footgear" product={selectedItems.Footgear} className="top-[73%] h-[22%] z-10" zOffset={0} />
+          </AnimatePresence>
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-// Flat Lay cards
-function FlatLayCard({ category, product, index, isMini = false }: { category: Category; product?: Product; index: number; isMini?: boolean }) {
-  const rotation = [2, -3, -1, 3, -1][index];
-  
-  return (
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: index * 0.05, type: 'spring' }}
-      className={`glass rounded-3xl p-4 flex flex-col items-center justify-center border relative transition-all duration-300 ${
-        isMini ? 'w-[140px] h-[100px]' : 'w-full h-[140px] md:h-[180px]'
-      } ${product ? 'border-border hover:border-accent/40 shadow-premium' : 'border-dashed border-border-subtle bg-surface-1'}`}
-      style={{ rotate: `${rotation}deg` }}
-    >
-      <span className="absolute top-2 left-3 text-[7px] uppercase font-black tracking-widest text-white/20">
-        {category}
-      </span>
-      {product ? (
-        <div className="w-full h-full flex flex-col items-center justify-center mt-2">
-          {isIconImage(product.image) ? (
-            <ItemGraphic
-              image={product.image}
-              strokeWidth={1.2}
-              className="w-12 h-12 text-accent drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
-            />
-          ) : (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="max-w-[75%] max-h-[75%] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]"
-            />
-          )}
-          {!isMini && (
-            <div className="absolute bottom-2 text-center w-full px-2">
-              <h4 className="text-[9px] font-black uppercase text-white/90 truncate">{product.name}</h4>
-              <p className="text-[8px] font-black text-accent mt-0.5">KES {product.price.toLocaleString()}</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center opacity-25">
-          <span className="text-xl">+</span>
-          <span className="text-[6px] uppercase tracking-wider mt-1">Empty Slot</span>
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
 // Layer overlay for Anatomical Silhouette
-function ModelLayer({ category, product, className, isHolo = false, zOffset = 0 }: { category: Category; product?: Product; className?: string; isHolo?: boolean; zOffset?: number }) {
+function ModelLayer({ category, product, className, zOffset = 0 }: { category: Category; product?: Product; className?: string; zOffset?: number }) {
   if (!product) {
     // Return a sleek glowing dotted box placeholder if slot is empty
     return (
-      <div 
+      <div
         className={`absolute left-1/2 w-[40%] flex items-center justify-center border border-dashed border-accent/20 bg-accent/[0.01] rounded-2xl ${(className ?? '').replace('-translate-x-1/2', '')}`}
         style={{ transform: `translateX(-50%) translateZ(${zOffset}px)` }}
       >
@@ -219,14 +84,14 @@ function ModelLayer({ category, product, className, isHolo = false, zOffset = 0 
   }
 
   return (
-    <div 
+    <div
       className={`absolute left-1/2 w-[70%] md:w-[65%] flex items-center justify-center transition-all duration-700 pointer-events-none ${(className ?? '').replace('-translate-x-1/2', '').replace('scale-x-90', '')}`}
       style={{ transform: `translateX(-50%) translateZ(${zOffset}px) ${className?.includes('scale-x-90') ? 'scaleX(0.9)' : ''}` }}
     >
       {isIconImage(product.image) ? (
         category === 'Accessories' ? (
           // Compact badge treatment for small accent items (shades, bags, watches)
-          <div className={`w-14 h-14 flex items-center justify-center rounded-xl bg-accent/10 border border-accent/30 ${isHolo ? 'animate-pulse' : ''}`}>
+          <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-accent/10 border border-accent/30">
             <ItemGraphic image={product.image} strokeWidth={1.5} className="w-8 h-8" style={{ color: 'var(--accent)' }} />
           </div>
         ) : (
@@ -234,19 +99,15 @@ function ModelLayer({ category, product, className, isHolo = false, zOffset = 0 
           <ItemGraphic
             image={product.image}
             strokeWidth={1}
-            className={`max-w-full max-h-full w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)] ${
-              isHolo ? 'opacity-80' : ''
-            }`}
-            style={{ color: isHolo ? 'var(--accent)' : 'var(--foreground)' }}
+            className="max-w-full max-h-full w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)]"
+            style={{ color: 'var(--foreground)' }}
           />
         )
       ) : (
         <img
           src={product.image}
           alt={product.name}
-          className={`max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)] ${
-            isHolo ? 'hue-rotate-[85deg] saturate-200 opacity-80 mix-blend-screen' : ''
-          }`}
+          className="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.5)]"
         />
       )}
     </div>
@@ -274,31 +135,6 @@ function HumanSilhouette() {
         {/* Legs & Feet */}
         <path d="M42 94h16l2 70-8 6-8-6 2-70z" />
       </svg>
-    </div>
-  );
-}
-
-// Neon 3D mesh background grid
-function HoloGrid() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden select-none" style={{ transform: 'translateZ(-50px)' }}>
-      {/* Cyberpunk matrix circles and vertical lines */}
-      <div className="absolute w-[300px] h-[300px] border border-dashed border-accent rounded-full animate-[spin_40s_linear_infinite]" />
-      <div className="absolute w-[450px] h-[450px] border border-accent/40 rounded-full animate-[spin_80s_linear_infinite_reverse]" />
-      <div className="absolute h-full w-[1px] bg-gradient-to-b from-transparent via-accent to-transparent left-1/2" />
-      <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-accent to-transparent top-1/2" />
-      
-      {/* Dynamic tech readout numbers */}
-      <div className="absolute top-10 left-10 text-[6px] text-accent font-mono uppercase tracking-[0.3em]">
-        SYSTEM: ACTIVE<br />
-        RENDER: 3D_MATRIX_HOLO<br />
-        FOV: 45DEG
-      </div>
-      <div className="absolute bottom-10 right-10 text-[6px] text-accent/80 font-mono uppercase tracking-[0.3em]">
-        NODE_X: 74.02<br />
-        NODE_Y: -22.9<br />
-        GRID: SEC_4
-      </div>
     </div>
   );
 }
