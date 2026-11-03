@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STREET LEGAL | Build the Fit</title>
+<meta name="description" content="Swipe through each category, press and hold to lock your pieces, pay with M-Pesa.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&family=Montserrat:ital,wght@0,500;0,600;1,500&family=Zilla+Slab:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b0b0b;
+    --paper: #ffffff;
+    --bar: #ccd5de;
+    --lock: #a7a8ab;
+    --muted: #6b6f75;
+    --hairline: #e3e5e8;
+    --radius: 16px;
+    --hold-ms: 550ms;
+
+    /* Stage geometry — row heights follow the wireframe (cap / top / bottom / shoes) */
+    --stage-h: min(76vh, 76dvh, 640px);
+    --card-w: calc(var(--stage-h) * 0.285);
+    --gap: 3px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Montserrat", system-ui, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; }
+
+  /* ───────── Cart bar ───────── */
+  .cartbar {
+    position: fixed; top: 0; left: 0; z-index: 20;
+    display: flex; align-items: center; gap: 18px;
+    padding: 8px 16px 8px 14px;
+    min-height: 65px;
+    background: var(--bar);
+    border-bottom-right-radius: 18px;
+  }
+  .cartbar svg { width: 48px; height: 48px; flex: none; }
+  .cart-count { font-family: "Lato"; font-weight: 700; font-size: 18px; white-space: nowrap; }
+  .cart-total { font-family: "Lato"; font-weight: 900; font-size: 27px; white-space: nowrap; letter-spacing: -0.01em; }
+  .pay {
+    font-family: "Lato"; font-weight: 900; font-size: 25px;
+    min-width: 170px; height: 48px; padding: 0 28px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: 0 4px 0 var(--ink);
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .2s;
+  }
+  .pay:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .pay:disabled { opacity: .45; cursor: not-allowed; }
+  .pay:focus-visible, .arrow:focus-visible, .card:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* ───────── Season label ───────── */
+  .season {
+    position: fixed; z-index: 1;
+    top: 80px; right: clamp(16px, 6.5vw, 96px);
+    margin: 0;
+    writing-mode: vertical-rl;
+    font-family: "Lato"; font-weight: 900;
+    font-size: min(12.2vh, 96px);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ───────── Stage ───────── */
+  main {
+    min-height: 100vh; min-height: 100dvh;
+    display: grid; place-items: center;
+    padding: 82px 16px 96px;
+  }
+  .stage {
+    width: min(760px, 100%);
+    height: var(--stage-h);
+    display: grid;
+    grid-template-rows: 12fr 32fr 44fr 12fr;
+    row-gap: var(--gap);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 44px 1fr var(--card-w) 1fr 44px;
+    align-items: center;
+    min-height: 0;
+  }
+
+  .row > .prev { grid-column: 1; }
+  .row > .meta.left { grid-column: 2; }
+  .row > .card { grid-column: 3; }
+  .row > .meta.right { grid-column: 4; }
+  .row > .next { grid-column: 5; }
+  .arrow {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity .2s, transform .12s;
+  }
+  .arrow svg { width: 24px; height: 24px; }
+  .arrow:active:not([aria-disabled="true"]) { transform: scale(.92); }
+  .arrow[aria-disabled="true"] { opacity: .2; cursor: not-allowed; }
+
+  .meta {
+    padding: 0 22px;
+    display: flex; flex-direction: column; gap: 3px;
+    min-width: 0;
+    transition: opacity .25s;
+  }
+  .meta.left { text-align: right; align-items: flex-end; }
+  .meta.right { text-align: left; align-items: flex-start; }
+  .meta .name {
+    font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+  }
+  .meta .price { font-family: "Lato"; font-weight: 900; font-size: 16px; }
+  .meta .idx { font-size: 11px; font-weight: 600; letter-spacing: .14em; color: var(--muted); }
+  .meta .lockmark {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    opacity: 0; transform: translateY(-3px);
+    transition: opacity .2s, transform .2s;
+  }
+  .meta .lockmark svg { width: 11px; height: 11px; }
+  .row.locked .lockmark { opacity: 1; transform: none; }
+
+  /* The item card */
+  .card {
+    position: relative;
+    height: 100%;
+    container-type: size;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-y;               /* vertical page scroll still works on phones */
+    user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    outline: none;
+  }
+  .card.dragging { cursor: grabbing; }
+  .row.locked .card { cursor: default; }
+
+  /* Gray lock background — grows up from the bottom while holding */
+  .fill {
+    position: absolute; inset: 0;
+    background: var(--lock);
+    border-radius: var(--radius);
+    clip-path: inset(100% 0 0 0 round var(--radius));
+    transition: clip-path .22s ease-out;
+  }
+  .row.locked .fill { clip-path: inset(0 0 0 0 round var(--radius)); }
+  .card.holding .fill { transition: clip-path var(--hold-ms) linear; clip-path: inset(0 0 0 0 round var(--radius)); }
+  .row.locked .card.holding .fill { clip-path: inset(100% 0 0 0 round var(--radius)); }
+
+  .track { position: absolute; inset: 0; will-change: transform; }
+  .track img {
+    position: absolute; left: 50%; top: 50%;
+    /* scale so the garment's visible bounds fill the card, then centre those bounds */
+    width: min(calc(var(--fw) * 100cqw / var(--bw)), calc(var(--fh) * 100cqh / var(--bh)));
+    height: auto; max-width: none; max-height: none;
+    transform: translate(calc(var(--cx) * -100%), calc(var(--cy) * -100%));
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+  .card.pop { animation: pop .28s ease-out; }
+  @keyframes nudge { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .card.nudge { animation: nudge .22s ease-in-out; }
+
+  /* ───────── Hint & footer ───────── */
+  .hint {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    z-index: 5;
+    font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: opacity .5s;
+  }
+  .hint.gone { opacity: 0; pointer-events: none; }
+
+  .talk {
+    position: fixed; left: 21px; bottom: 12px; z-index: 5;
+    line-height: 1.35;
+  }
+  .talk h2 { margin: 0 0 4px; font-family: "Zilla Slab", Georgia, serif; font-weight: 700; font-size: 22px; letter-spacing: .01em; }
+  .talk p { margin: 0; font-size: 12.5px; font-weight: 500; }
+  .talk a { color: inherit; text-decoration: none; }
+  .talk a:hover { text-decoration: underline; }
+  .talk .email { font-style: italic; }
+
+  /* ───────── Pay sheet ───────── */
+  .sheet-backdrop {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(11,11,11,.35);
+    display: grid; place-items: center;
+    padding: 16px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: min(420px, 100%);
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 0 6px 0 var(--ink);
+    padding: 22px;
+    transform: translateY(12px);
+    transition: transform .2s;
+  }
+  .sheet-backdrop.open .sheet { transform: none; }
+  .sheet h3 { margin: 0 0 14px; font-family: "Lato"; font-weight: 900; font-size: 24px; }
+  .sheet ul { list-style: none; margin: 0 0 14px; padding: 0; }
+  .sheet li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hairline); }
+  .sheet li img { width: 44px; height: 44px; object-fit: contain; background: #eef0f2; border-radius: 10px; }
+  .sheet li .n { flex: 1; font-size: 13px; font-weight: 600; }
+  .sheet li .p { font-family: "Lato"; font-weight: 900; }
+  .sheet .total { display: flex; justify-content: space-between; font-family: "Lato"; font-weight: 900; font-size: 20px; margin: 4px 0 16px; }
+  .sheet label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .sheet input {
+    width: 100%; height: 46px; padding: 0 14px;
+    font: 500 16px "Montserrat", sans-serif;
+    border: 1.5px solid var(--ink); border-radius: 12px;
+  }
+  .sheet .actions { display: flex; gap: 10px; margin-top: 16px; }
+  .sheet .actions .pay { flex: 1; min-width: 0; font-size: 19px; height: 46px; }
+  .sheet .ghost { background: none; border: none; font-weight: 600; cursor: pointer; padding: 0 10px; }
+  .sheet .status { min-height: 18px; margin: 10px 0 0; font-size: 12.5px; font-weight: 500; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ───────── Smaller screens ───────── */
+  @media (max-width: 900px) {
+    .season { font-size: min(9vh, 64px); right: 12px; }
+    .meta.right { display: none; }
+    .row { grid-template-columns: 44px 1fr var(--card-w) 12px 44px; }
+    main { padding-right: 70px; }
+  }
+  @media (max-width: 640px) {
+    :root { --stage-h: min(64dvh, 520px, calc((100vw - 140px) / 0.285)); }
+    .cartbar { right: 0; border-bottom-right-radius: 0; gap: 10px; padding: 8px 12px; min-height: 58px; }
+    .cartbar svg { width: 36px; height: 36px; }
+    .cart-count { font-size: 13px; }
+    .cart-total { font-size: 19px; }
+    .pay { min-width: 0; font-size: 19px; height: 40px; padding: 0 22px; margin-left: auto; }
+    .season { top: 100px; right: 8px; font-size: 40px; }
+    main { min-height: 0; display: flex; flex-direction: column; align-items: stretch; padding: 100px 58px 8px 16px; }
+    .stage { width: 100%; }
+    .row { grid-template-columns: 40px 1fr var(--card-w) 1fr 40px; }
+    .arrow { width: 40px; height: 40px; }
+    .meta { display: none; }
+    .hint { bottom: auto; top: 70px; left: 16px; transform: none; }
+    .talk { position: static; padding: 8px 16px 24px; }
+    main .mobile-caption { display: block; }
+  }
+  .mobile-caption {
+    display: none;
+    margin: 14px 0 0; min-height: 18px;
+    text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .mobile-caption b { font-family: "Lato"; font-weight: 900; color: var(--ink); letter-spacing: 0; font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card.pop, .card.nudge { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="cartbar" aria-label="Cart">
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 7h6l6.5 25h22.5"/>
+    <path d="M11.2 13H44l-4.2 14H14.8"/>
+    <path d="M12.6 17.5h29.8M13.8 22.5h27.2M18 13l2.2 14M24 13l1.1 14M30 13v14M36 13l-1.1 14"/>
+    <circle cx="19" cy="39.5" r="2.8"/><circle cx="34" cy="39.5" r="2.8"/>
+  </svg>
+  <span class="cart-count" id="cartCount">No items selected</span>
+  <span class="cart-total" id="cartTotal">Ksh 0/-</span>
+  <button class="pay" id="payBtn" disabled>Pay</button>
+</header>
+
+<h1 class="season" id="season">NOV-DEC-JAN</h1>
+
+<main>
+  <section class="stage" id="stage" aria-label="Outfit builder. Swipe or use arrows to browse each category; press and hold an item to lock it."></section>
+  <p class="mobile-caption" id="mobileCaption" aria-live="polite"></p>
+</main>
+
+<p class="hint" id="hint">Swipe to browse · Press &amp; hold to lock</p>
+
+<footer class="talk" id="talk">
+  <h2>TALK TO US</h2>
+</footer>
+
+<div class="sheet-backdrop" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <form class="sheet" id="sheetForm">
+    <h3 id="sheetTitle">Your fit</h3>
+    <ul id="sheetList"></ul>
+    <div class="total"><span>Total</span><span id="sheetTotal"></span></div>
+    <label for="phone">M-Pesa number</label>
+    <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX" required>
+    <p class="status" id="sheetStatus" role="status"></p>
+    <div class="actions">
+      <button type="button" class="ghost" id="sheetClose">Back</button>
+      <button type="submit" class="pay" id="sheetPay">Pay with M-Pesa</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   CONFIG — edit here
+   ════════════════════════════════════════════════════════════════ */
+const SEASON = "NOV-DEC-JAN";
+
+const CONTACT = {
+  phones: [],                       // e.g. ["+254 7XX XXX XXX"] — add real numbers here
+  email: "info@streetlegal.shop",
+};
+
+// Served from the site's own /products folder; opened as a local file it borrows the live site's copies.
+const ASSET_BASE = location.protocol === "file:" ? "https://streetlegal.shop/products/" : "/products/";
+
+// M-Pesa STK push endpoint. null = payments not live yet (the sheet says so instead of charging).
+const CHECKOUT_ENDPOINT = null;
+
+// box = visible garment bounds inside the 1024² PNG [x0, y0, x1, y1] (measured from the files)
+const CATEGORIES = [
+  { key: "head",   apiCategory: "headwear", label: "Head gear", fill: [0.80, 0.80], items: [
+    { id: "h1", name: "Noir Supply Beanie",  price: 200,  box: [0.176, 0.168, 0.824, 0.828] },
+    { id: "h2", name: "Aura Streetwear Cap", price: 350,  box: [0.066, 0.219, 0.930, 0.770] },
+    { id: "h3", name: "Aeon Studio Bucket",  price: 250,  box: [0.102, 0.207, 0.902, 0.793] },
+  ]},
+  { key: "top",    apiCategory: "top",      label: "Tops",      fill: [0.98, 0.90], items: [
+    { id: "t1", name: "Void Heavy Hoodie",   price: 1500, box: [0.145, 0.047, 0.859, 0.934] },
+    { id: "t2", name: "Axon-9 Tech Jacket",  price: 500,  box: [0.145, 0.035, 0.852, 1.000] },
+    { id: "t3", name: "Aether Graphic Tee",  price: 500,  box: [0.129, 0.000, 0.883, 0.930] },
+  ]},
+  { key: "bottom", apiCategory: "bottom",   label: "Bottoms",   fill: [0.96, 0.97], items: [
+    { id: "b1", name: "Aether Cargo Jogger", price: 1200, box: [0.301, 0.055, 0.699, 0.945] },
+    { id: "b2", name: "Archive Baggy Denim", price: 1500, box: [0.234, 0.043, 0.766, 0.957] },
+    { id: "b3", name: "Street Nylon Shorts", price: 700,  box: [0.066, 0.133, 0.934, 0.828] },
+  ]},
+  { key: "feet",   apiCategory: "footwear", label: "Foot gear", fill: [0.92, 0.84], items: [
+    { id: "f1", name: "Apex Neo Runners",    price: 2500, box: [0.051, 0.121, 0.949, 0.848] },
+    { id: "f2", name: "Urban Tactical Boot", price: 2500, box: [0.082, 0.145, 0.918, 0.867] },
+    { id: "f3", name: "Canvas High-Tops",    price: 1200, box: [0.047, 0.227, 0.953, 0.859] },
+  ]},
+];
+
+/* ════════════════════════════════════════════════════════════════ */
+const HOLD_MS = 550;
+const SWIPE_PX = 45;
+const MOVE_CANCEL_PX = 8;
+const STORE_KEY = "sl-fit-v2";
+
+const state = load() || { idx: {}, locked: {} };
+CATEGORIES.forEach(c => { state.idx[c.key] ??= 0; state.locked[c.key] ??= false; });
+
+const $ = id => document.getElementById(id);
+const srcOf = item => ASSET_BASE + item.id + ".png";
+const money = n => "Ksh " + n + "/-";
+const current = c => c.items[((state.idx[c.key] % c.items.length) + c.items.length) % c.items.length];
+
+const chevrons = dir => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${
+  dir < 0 ? '<path d="M10 6l-6 6 6 6M15 6l-6 6 6 6M20 6l-6 6 6 6"/>' : '<path d="M4 6l6 6-6 6M9 6l6 6-6 6M14 6l6 6-6 6"/>'}</svg>`;
+const lockIcon = `<svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3.5 5V3.6a2.5 2.5 0 015 0V5h.7c.4 0 .8.4.8.8v4.4c0 .4-.4.8-.8.8H2.8c-.4 0-.8-.4-.8-.8V5.8c0-.4.4-.8.8-.8h.7zm1.2 0h2.6V3.6a1.3 1.3 0 00-2.6 0V5z"/></svg>`;
+
+function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch { return null; } }
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {} }
+
+/* ───────── Build rows ───────── */
+const rows = {};
+function imgVars(img, item, cat) {
+  const [x0, y0, x1, y1] = item.box;
+  img.style.setProperty("--bw", x1 - x0);
+  img.style.setProperty("--bh", y1 - y0);
+  img.style.setProperty("--cx", (x0 + x1) / 2);
+  img.style.setProperty("--cy", (y0 + y1) / 2);
+  img.style.setProperty("--fw", cat.fill[0]);
+  img.style.setProperty("--fh", cat.fill[1]);
+  img.src = srcOf(item);
+  img.alt = item.name;
+}
+
+CATEGORIES.forEach(cat => {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `
+    <button class="arrow prev" aria-label="Previous ${cat.label}">${chevrons(-1)}</button>
+    <div class="meta left"><span class="name"></span><span class="price"></span></div>
+    <div class="card" tabindex="0" role="button" aria-roledescription="item carousel">
+      <div class="fill"></div>
+      <div class="track"><img draggable="false" decoding="async"></div>
+    </div>
+    <div class="meta right"><span class="idx"></span><span class="lockmark">${lockIcon}Locked</span></div>
+    <button class="arrow next" aria-label="Next ${cat.label}">${chevrons(1)}</button>`;
+  $("stage").appendChild(row);
+
+  const r = {
+    cat, row,
+    card: row.querySelector(".card"),
+    track: row.querySelector(".track"),
+    img: row.querySelector("img"),
+    name: row.querySelector(".name"),
+    price: row.querySelector(".price"),
+    idx: row.querySelector(".idx"),
+    prev: row.querySelector(".prev"),
+    next: row.querySelector(".next"),
+    busy: false,
+  };
+  rows[cat.key] = r;
+
+  r.prev.addEventListener("click", () => step(r, -1));
+  r.next.addEventListener("click", () => step(r, +1));
+  wireGestures(r);
+  paint(r);
+
+  cat.items.forEach(it => { const p = new Image(); p.src = srcOf(it); });   // preload
+});
+
+function paint(r) {
+  const { cat } = r, item = current(cat), locked = state.locked[cat.key];
+  imgVars(r.img, item, cat);
+  r.name.textContent = item.name;
+  r.price.textContent = money(item.price);
+  const n = cat.items.indexOf(item) + 1;
+  r.idx.textContent = String(n).padStart(2, "0") + " / " + String(cat.items.length).padStart(2, "0");
+  r.row.classList.toggle("locked", locked);
+  r.card.setAttribute("aria-pressed", locked);
+  r.card.setAttribute("aria-label", `${cat.label}: ${item.name}, ${money(item.price)}. ${locked ? "Locked. Press and hold, or Enter, to unlock." : "Arrow keys to browse. Press and hold, or Enter, to lock."}`);
+  [r.prev, r.next].forEach(b => b.setAttribute("aria-disabled", locked));
+}
+
+/* ───────── Browsing ───────── */
+function animate(el, frames, ms, easing) {
+  return el.animate(frames, { duration: ms, easing, fill: "forwards" }).finished;
+}
+
+async function step(r, dir, fromDx = 0) {
+  if (state.locked[r.cat.key]) { nudge(r); return; }
+  if (r.busy) return;
+  r.busy = true;
+  const w = r.card.clientWidth * 1.15;
+  await animate(r.track, [{ transform: `translateX(${fromDx}px)` }, { transform: `translateX(${-dir * w}px)`, opacity: 0.2 }], 170, "cubic-bezier(.4,0,1,1)");
+  state.idx[r.cat.key] += dir;
+  paint(r); save(); updateCart(); caption(r);
+  await animate(r.track, [{ transform: `translateX(${dir * w}px)`, opacity: 0.2 }, { transform: "translateX(0)", opacity: 1 }], 260, "cubic-bezier(.2,.8,.2,1)");
+  r.track.getAnimations().forEach(a => a.cancel());
+  r.busy = false;
+  dismissHint();
+}
+
+function nudge(r) {
+  r.card.classList.remove("nudge"); void r.card.offsetWidth; r.card.classList.add("nudge");
+}
+
+/* ───────── Gestures: swipe = browse, press & hold = lock ───────── */
+function wireGestures(r) {
+  let pid = null, x0 = 0, y0 = 0, dx = 0, mode = null, holdTimer = null;
+
+  const startHold = () => {
+    r.card.classList.add("holding");
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      r.card.classList.remove("holding");
+      toggleLock(r);
+      mode = "done";
+    }, HOLD_MS);
+  };
+  const cancelHold = () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    r.card.classList.remove("holding");
+  };
+
+  r.card.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || r.busy) return;
+    pid = e.pointerId; x0 = e.clientX; y0 = e.clientY; dx = 0; mode = "pending";
+    r.card.setPointerCapture(pid);
+    startHold();
+  });
+
+  r.card.addEventListener("pointermove", e => {
+    if (e.pointerId !== pid || mode === "done") return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (mode === "pending" && Math.hypot(mx, my) > MOVE_CANCEL_PX) {
+      cancelHold();
+      if (Math.abs(mx) > Math.abs(my) && !state.locked[r.cat.key]) {
+        mode = "drag"; r.card.classList.add("dragging");
+      } else {
+        mode = state.locked[r.cat.key] && Math.abs(mx) > Math.abs(my) ? "lockedDrag" : "scroll";
+      }
+    }
+    if (mode === "drag") {
+      dx = mx;
+      r.track.style.transform = `translateX(${dx}px)`;
+      r.track.style.opacity = String(1 - Math.min(Math.abs(dx) / (r.card.clientWidth * 1.6), 0.6));
+    }
+  });
+
+  const end = e => {
+    if (e.pointerId !== pid) return;
+    pid = null;
+    cancelHold();
+    r.card.classList.remove("dragging");
+    if (mode === "drag") {
+      const w = dx;
+      r.track.style.transform = ""; r.track.style.opacity = "";
+      if (Math.abs(w) > SWIPE_PX) step(r, w < 0 ? +1 : -1, w);
+      else r.track.animate([{ transform: `translateX(${w}px)` }, { transform: "translateX(0)" }], { duration: 200, easing: "cubic-bezier(.2,.8,.2,1)" });
+    } else if (mode === "lockedDrag") {
+      nudge(r);
+    }
+    mode = null;
+  };
+  r.card.addEventListener("pointerup", end);
+  r.card.addEventListener("pointercancel", end);
+  r.card.addEventListener("contextmenu", e => e.preventDefault());
+
+  r.card.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(r, -1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); step(r, +1); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleLock(r); }
+  });
+}
+
+function toggleLock(r) {
+  const k = r.cat.key;
+  state.locked[k] = !state.locked[k];
+  if (navigator.vibrate) { try { navigator.vibrate(state.locked[k] ? 18 : [8, 40, 8]); } catch {} }
+  paint(r); save(); updateCart(); caption(r);
+  r.card.classList.remove("pop"); void r.card.offsetWidth; r.card.classList.add("pop");
+  dismissHint();
+}
+
+/* ───────── Cart ───────── */
+function lockedItems() {
+  return CATEGORIES.filter(c => state.locked[c.key]).map(c => ({ cat: c, item: current(c) }));
+}
+function updateCart() {
+  const sel = lockedItems();
+  const total = sel.reduce((s, x) => s + x.item.price, 0);
+  $("cartCount").textContent = sel.length ? `${sel.length} item${sel.length > 1 ? "s" : ""} selected` : "No items selected";
+  $("cartTotal").textContent = money(total);
+  $("payBtn").disabled = sel.length === 0;
+}
+
+function caption(r) {
+  const item = current(r.cat);
+  $("mobileCaption").innerHTML = `${item.name} &nbsp;<b>${money(item.price)}</b>${state.locked[r.cat.key] ? " &nbsp;· locked" : ""}`;
+}
+
+/* ───────── Hint ───────── */
+let hintGone = false;
+function dismissHint() { if (!hintGone) { hintGone = true; setTimeout(() => $("hint").classList.add("gone"), 600); } }
+try { if (localStorage.getItem(STORE_KEY)) $("hint").classList.add("gone"); } catch {}
+
+/* ───────── Pay sheet ───────── */
+const sheet = $("sheet");
+function openSheet() {
+  const sel = lockedItems();
+  if (!sel.length) return;
+  $("sheetList").innerHTML = sel.map(({ cat, item }) =>
+    `<li><img src="${srcOf(item)}" alt=""><span class="n">${item.name}</span><span class="p">${money(item.price)}</span></li>`).join("");
+  $("sheetTotal").textContent = money(sel.reduce((s, x) => s + x.item.price, 0));
+  $("sheetStatus").textContent = "";
+  sheet.classList.add("open");
+  setTimeout(() => $("phone").focus(), 50);
+}
+function closeSheet() { sheet.classList.remove("open"); $("payBtn").focus(); }
+$("payBtn").addEventListener("click", openSheet);
+$("sheetClose").addEventListener("click", closeSheet);
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sheet.classList.contains("open")) closeSheet(); });
+
+$("sheetForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const status = $("sheetStatus");
+  const phone = $("phone").value.trim();
+  if (!/^(\+?254|0)?[17]\d{8}$/.test(phone.replace(/\s+/g, ""))) {
+    status.textContent = "Enter a valid Safaricom number, e.g. 0712 345 678.";
+    return;
+  }
+  const items = lockedItems().map(({ cat, item }) => ({ category: cat.apiCategory, productId: item.id, variantId: "OSFA" }));
+  document.dispatchEvent(new CustomEvent("streetlegal:pay", { detail: { phone, items } }));
+  if (!CHECKOUT_ENDPOINT) { status.textContent = `M-Pesa checkout opens soon. To reserve this fit now, email ${CONTACT.email}.`; return; }
+  const btn = $("sheetPay");
+  btn.disabled = true; status.textContent = "Sending M-Pesa prompt to your phone…";
+  try {
+    const res = await fetch(CHECKOUT_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phoneNumber: phone, items }) });
+    const data = await res.json().catch(() => ({}));
+    status.textContent = res.ok ? "Check your phone and enter your M-Pesa PIN to finish." : (data.error || "Payment couldn't start. Try again.");
+  } catch {
+    status.textContent = "Network error — payment couldn't start.";
+  } finally { btn.disabled = false; }
+});
+
+/* ───────── Static bits ───────── */
+$("season").textContent = SEASON;
+$("talk").insertAdjacentHTML("beforeend",
+  CONTACT.phones.map(p => `<p><a href="tel:${p.replace(/[^\d+]/g, "")}">${p}</a></p>`).join("") +
+  (CONTACT.email ? `<p class="email"><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></p>` : ""));
+
+updateCart();
+caption(rows.top);
+</script>
+</body>
+</html>
