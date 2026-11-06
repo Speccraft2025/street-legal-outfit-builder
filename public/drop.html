@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STREET LEGAL | NOV-DEC-JAN Drop</title>
+<meta name="description" content="The full Street Legal drop on one page.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lato:wght@900&display=swap" rel="stylesheet">
+<style>
+  /* Layout: fixed thin header (back · drop + category filter · bag), then an even product grid, 6 → 3 → 2 columns. */
+  :root {
+    --ink: #0b0b0b;
+    --paper: #ffffff;
+    --dim: #c3c6ca;
+    --muted: #6b6f75;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --display: "Lato", "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+  /* ───────── Header ───────── */
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 18px max(16px, env(safe-area-inset-right, 0px)) 18px max(16px, env(safe-area-inset-left, 0px));
+    background: var(--paper);
+  }
+  .back { justify-self: start; display: inline-flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .06em; }
+  .back svg { width: 22px; height: 22px; flex: none; }
+  .back span { opacity: 0; transform: translateX(-4px); transition: opacity .2s, transform .2s; }
+  .back:hover span, .back:focus-visible span { opacity: 1; transform: none; }
+
+  .center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .drop-name { font-family: var(--display); font-weight: 900; font-size: 15px; letter-spacing: .02em; }
+  .filters { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+  .filters button { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); transition: color .15s; }
+  .filters button:hover { color: var(--muted); }
+  .filters button[aria-pressed="true"] { color: var(--ink); }
+
+  .bag { justify-self: end; position: relative; display: inline-grid; place-items: center; width: 34px; height: 34px; }
+  .bag svg { width: 22px; height: 22px; }
+  .bag b {
+    position: absolute; top: 0; right: -2px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    display: grid; place-items: center;
+    background: var(--ink); color: var(--paper);
+    border-radius: 999px; font: 500 10px/1 var(--mono);
+  }
+  .bag b[hidden] { display: none; }
+
+  /* ───────── Grid ───────── */
+  main { padding: 28px max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px)); }
+  .grid {
+    list-style: none; margin: 0 auto; padding: 0;
+    max-width: 1880px;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: clamp(12px, 2vw, 40px); row-gap: clamp(28px, 4vw, 64px);
+  }
+  .grid li[hidden] { display: none; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .shot {
+    position: relative; width: 100%; aspect-ratio: 1 / 1;
+    container-type: size; overflow: hidden;
+  }
+  .shot img {
+    position: absolute; left: 50%; top: 50%;
+    /* scale each garment by its own visible bounds so every piece reads at the same size */
+    width: min(calc(0.86 * 100cqw / var(--bw)), calc(0.86 * 100cqh / var(--bh)));
+    height: auto; max-width: none;
+    transform: translate(calc(var(--cx) * -100%), calc(var(--cy) * -100%)) scale(1);
+    transform-origin: calc(var(--cx) * 100%) calc(var(--cy) * 100%);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .tile:hover .shot img { transform: translate(calc(var(--cx) * -100%), calc(var(--cy) * -100%)) scale(1.04); }
+  .code { font-size: 17px; letter-spacing: .08em; }
+  .info { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: -8px; font-size: 12px; color: var(--muted); text-align: center; opacity: 0; transition: opacity .2s; }
+  .info .price { color: var(--ink); font-weight: 500; }
+  .tile:hover .info, .tile:focus-visible .info { opacity: 1; }
+  @media (hover: none) { .info { opacity: 1; } }
+
+  .count { margin: 48px 0 0; text-align: center; font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+
+  @media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 600px) {
+    header { grid-template-columns: 40px 1fr 40px; padding-block: 14px; }
+    .back span { display: none; }
+    .filters { gap: 12px; row-gap: 6px; }
+    .filters button { font-size: 12px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .code { font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .shot img, .back span { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/" aria-label="Back to the fit builder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    <span>BUILD THE FIT</span>
+  </a>
+  <div class="center">
+    <span class="drop-name" id="dropName">NOV-DEC-JAN</span>
+    <nav class="filters" id="filters" aria-label="Filter by category"></nav>
+  </div>
+  <a class="bag" href="/" aria-label="Your fit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>
+    <b id="bagCount" hidden></b>
+  </a>
+</header>
+
+<main>
+  <ul class="grid" id="grid"></ul>
+  <p class="count" id="count"></p>
+</main>
+
+<script src="/catalog.js"></script>
+<script>
+const { season, categories } = window.SL;
+const $ = id => document.getElementById(id);
+
+document.title = `STREET LEGAL | ${season} Drop`;
+$("dropName").textContent = season;
+
+/* Grid */
+const items = categories.flatMap(c => c.items.map(it => ({ ...it, cat: c.key })));
+$("grid").innerHTML = items.map(it => {
+  const [x0, y0, x1, y1] = it.box;
+  const vars = `--bw:${x1 - x0};--bh:${y1 - y0};--cx:${(x0 + x1) / 2};--cy:${(y0 + y1) / 2}`;
+  return `<li data-cat="${it.cat}">
+    <a class="tile" href="/#${it.id}" aria-label="${it.code}, ${it.name}, Ksh ${it.price}. Open in the fit builder.">
+      <span class="shot"><img src="/products/${it.id}.png" alt="${it.name}" style="${vars}" decoding="async"></span>
+      <span class="code">${it.code}</span>
+      <span class="info"><span>${it.name}</span><span class="price">Ksh ${it.price}/-</span></span>
+    </a></li>`;
+}).join("");
+
+/* Filters: ALL + one per category */
+const filters = [{ key: "all", label: "All" }, ...categories.map(c => ({ key: c.key, label: c.label }))];
+$("filters").innerHTML = filters.map(f => `<button type="button" data-key="${f.key}" aria-pressed="false">${f.label}</button>`).join("");
+
+function applyFilter(key) {
+  let shown = 0;
+  document.querySelectorAll("#grid li").forEach(li => {
+    li.hidden = key !== "all" && li.dataset.cat !== key;
+    if (!li.hidden) shown++;
+  });
+  document.querySelectorAll("#filters button").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === key));
+  $("count").textContent = `${shown} piece${shown === 1 ? "" : "s"} · ${season}`;
+  try { sessionStorage.setItem("sl-drop-filter", key); } catch {}
+}
+$("filters").addEventListener("click", e => {
+  const b = e.target.closest("button[data-key]");
+  if (b) applyFilter(b.dataset.key);
+});
+let start = "all";
+try { start = sessionStorage.getItem("sl-drop-filter") || "all"; } catch {}
+applyFilter(filters.some(f => f.key === start) ? start : "all");
+
+/* Bag: how many pieces are locked into the visitor's fit on the home page */
+try {
+  const fit = JSON.parse(localStorage.getItem("sl-fit-v2"));
+  const n = fit ? Object.values(fit.locked || {}).filter(Boolean).length : 0;
+  if (n) { $("bagCount").textContent = n; $("bagCount").hidden = false; }
+} catch {}
+</script>
+</body>
+</html>

@@ -75,8 +75,10 @@
     line-height: 1;
     letter-spacing: 0.01em;
     user-select: none;
-    pointer-events: none;
   }
+  .season a { color: inherit; text-decoration: none; display: block; transition: opacity .2s; }
+  .season a:hover { opacity: .55; }
+  .season a:focus-visible { outline: 2px solid var(--ink); outline-offset: 6px; }
 
   /* ───────── Stage ───────── */
   main {
@@ -297,7 +299,7 @@
   <button class="pay" id="payBtn" disabled>Pay</button>
 </header>
 
-<h1 class="season" id="season">NOV-DEC-JAN</h1>
+<h1 class="season"><a href="/drop" id="season" title="See the whole drop">NOV-DEC-JAN</a></h1>
 
 <main>
   <section class="stage" id="stage" aria-label="Outfit builder. Swipe or use arrows to browse each category; press and hold an item to lock it."></section>
@@ -325,46 +327,16 @@
   </form>
 </div>
 
+<script src="/catalog.js"></script>
 <script>
-/* ════════════════════════════════════════════════════════════════
-   CONFIG — edit here
-   ════════════════════════════════════════════════════════════════ */
-const SEASON = "NOV-DEC-JAN";
-
-const CONTACT = {
-  phones: [],                       // e.g. ["+254 7XX XXX XXX"] — add real numbers here
-  email: "info@streetlegal.shop",
-};
+/* Catalog, season and contact details live in /catalog.js (shared with /drop). */
+const { season: SEASON, contact: CONTACT, categories: CATEGORIES } = window.SL;
 
 // Served from the site's own /products folder; opened as a local file it borrows the live site's copies.
 const ASSET_BASE = location.protocol === "file:" ? "https://streetlegal.shop/products/" : "/products/";
 
 // M-Pesa STK push endpoint. null = payments not live yet (the sheet says so instead of charging).
 const CHECKOUT_ENDPOINT = null;
-
-// box = visible garment bounds inside the 1024² PNG [x0, y0, x1, y1] (measured from the files)
-const CATEGORIES = [
-  { key: "head",   apiCategory: "headwear", label: "Head gear", fill: [0.80, 0.80], items: [
-    { id: "h1", name: "Noir Supply Beanie",  price: 200,  box: [0.176, 0.168, 0.824, 0.828] },
-    { id: "h2", name: "Aura Streetwear Cap", price: 350,  box: [0.066, 0.219, 0.930, 0.770] },
-    { id: "h3", name: "Aeon Studio Bucket",  price: 250,  box: [0.102, 0.207, 0.902, 0.793] },
-  ]},
-  { key: "top",    apiCategory: "top",      label: "Tops",      fill: [0.98, 0.90], items: [
-    { id: "t1", name: "Void Heavy Hoodie",   price: 1500, box: [0.145, 0.047, 0.859, 0.934] },
-    { id: "t2", name: "Axon-9 Tech Jacket",  price: 500,  box: [0.145, 0.035, 0.852, 1.000] },
-    { id: "t3", name: "Aether Graphic Tee",  price: 500,  box: [0.129, 0.000, 0.883, 0.930] },
-  ]},
-  { key: "bottom", apiCategory: "bottom",   label: "Bottoms",   fill: [0.96, 0.97], items: [
-    { id: "b1", name: "Aether Cargo Jogger", price: 1200, box: [0.301, 0.055, 0.699, 0.945] },
-    { id: "b2", name: "Archive Baggy Denim", price: 1500, box: [0.234, 0.043, 0.766, 0.957] },
-    { id: "b3", name: "Street Nylon Shorts", price: 700,  box: [0.066, 0.133, 0.934, 0.828] },
-  ]},
-  { key: "feet",   apiCategory: "footwear", label: "Foot gear", fill: [0.92, 0.84], items: [
-    { id: "f1", name: "Apex Neo Runners",    price: 2500, box: [0.051, 0.121, 0.949, 0.848] },
-    { id: "f2", name: "Urban Tactical Boot", price: 2500, box: [0.082, 0.145, 0.918, 0.867] },
-    { id: "f3", name: "Canvas High-Tops",    price: 1200, box: [0.047, 0.227, 0.953, 0.859] },
-  ]},
-];
 
 /* ════════════════════════════════════════════════════════════════ */
 const HOLD_MS = 550;
@@ -374,6 +346,17 @@ const STORE_KEY = "sl-fit-v2";
 
 const state = load() || { idx: {}, locked: {} };
 CATEGORIES.forEach(c => { state.idx[c.key] ??= 0; state.locked[c.key] ??= false; });
+
+// Arriving from /drop with "#<item id>": show that piece in its row (unless the row is locked).
+(function openFromHash() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (!id) return;
+  for (const c of CATEGORIES) {
+    const i = c.items.findIndex(it => it.id === id);
+    if (i >= 0 && !state.locked[c.key]) state.idx[c.key] = i;
+  }
+  history.replaceState(null, "", location.pathname);
+})();
 
 const $ = id => document.getElementById(id);
 const srcOf = item => ASSET_BASE + item.id + ".png";
